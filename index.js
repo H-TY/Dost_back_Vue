@@ -37,7 +37,7 @@ app.use(cors({
   // callback(錯誤, 是否允許)
   origin(origin, callback) {
     // 若來源是 undefined 或 包含文字 localhost 或 包含文字 127.0.0.1；允許通過
-    if (origin === undefined || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    if (origin === undefined || origin.includes('github.io') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
       callback(null, true)
     } else {
       // 若非上述情況，丟出錯誤訊息；拒絕通過
