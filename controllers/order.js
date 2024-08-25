@@ -32,14 +32,21 @@ export const create = async (req, res) => {
 
 export const getAll = async (req, res) => {
   try {
+    // 檢查是否有從前端傳入值 ↓
     console.log('req.query.search', req.query.search)
+
+    // 從前端傳入要搜尋的值，再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
+    // 若 req.query.search 是 '' 空值，表示要搜尋並回傳前端所有資料
     const regex = new RegExp(req.query.search || '', 'i')
     const data = await MbookingOrderData
       // 搜尋功能，採用上述的 regex 做參數
       .find({
-        // $or 符合其中一個條件即可
+        // $or 表示符合其中一個條件即可
+        // 給的參數要能做正則表達式，假若用 _id 會失敗，會直接以 _id 去搜尋
+        // 如果要用 _id 搜尋資料，須提供的是 24 字符的十六进制字符串（比如 "507f1f77bcf86cd799439011"）
+        // const id = new ObjectId('507f1f77bcf86cd799439011')
         $or: [
-          { name: regex }, // 狗狗名字要符合正則表達式
+          { name: regex },
           { feature: regex }]
       })
     const total = await MbookingOrderData.estimatedDocumentCount()
@@ -62,8 +69,14 @@ export const getAll = async (req, res) => {
 export const get = async (req, res) => {
   try {
     console.log('req.query.search', req.query.search)
+    // 因有要找到指定的相關資料，故從前端傳入要搜尋的值（req.query.search＝User.value）↓
+    // const { data } = await apiAuth.get('/order',{
+    //   params: {
+    //     search: User.value
+    //   }
+    // })
+    // 再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
     const regex = new RegExp(req.query.search || '', 'i')
-
     const data = await MbookingOrderData
       // 搜尋功能，採用上述的 regex 做參數
       .find({
