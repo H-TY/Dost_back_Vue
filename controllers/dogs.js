@@ -51,7 +51,7 @@ export const getAll = async (req, res) => {
           { dogName: regex }, // 狗狗名字要符合正則表達式
           { feature: regex }]
       })
-      // 排序功能
+      // 排序功能，依照 sortBy('createdAt') 的資料，做 sortOrder('desc') 升冪排序要回傳的資料
       // const text = 'a'
       // const obj = { [text]: 1 }
       // 變數要用 []
@@ -125,10 +125,11 @@ export const edit = async (req, res) => {
 // 使用者只能看到有標註上架的狗狗資訊
 export const get = async (req, res) => {
   try {
+    // console.log(req.query.itemsPerPage)
     // 前面東西沒有的時候，使用後面的預設值 createdAt
     const sortBy = req.query.sortBy || 'createdAt'
     const sortOrder = req.query.sortOrder || 'desc'
-    const itemsPerPage = req.query.itemsPerPage * 1 || 10
+    const itemsPerPage = req.query.itemsPerPage * 1 || 0
     const page = req.query.page * 1 || 1
     // 用正則表達式處理搜尋文字以及 i 不分大小寫
     // g 全域；i 不分大小寫
@@ -140,11 +141,12 @@ export const get = async (req, res) => {
         // 只看得到有表註上架的狗狗資訊
         sell: true,
         // $or 符合其中一個條件即可
+        // regex 正則表達式只能應用於 "string 字符串/字串/文字" 類型
         $or: [
-          { dogName: regex }, // 狗狗名字要符合正則表達式
-          { feature: regex }]
+          { dogName: regex },
+          { booking: regex }]
       })
-      // 排序功能
+      // 排序功能，依照 sortBy('createdAt') 的資料，做 sortOrder('desc') 升冪排序要回傳的資料
       // const text = 'a'
       // const obj = { [text]: 1 }
       // 變數要用 []
@@ -178,6 +180,7 @@ export const get = async (req, res) => {
 // 查詢單個指定商品
 export const getId = async (req, res) => {
   try {
+    // console.log(req.params.id)
     if (!validator.isMongoId(req.params.id)) throw new Error('ID')
 
     const result = await MdogsData.findById(req.params.id).orFail(new Error('NOT FOUND'))
