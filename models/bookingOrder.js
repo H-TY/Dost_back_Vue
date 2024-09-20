@@ -25,6 +25,11 @@ const bookingOrderData = new Schema({
     type: [String],
     required: [true, '訂單預約時段必填']
   },
+  totalBookingTime: {
+    type: Number,
+    required: [true, '訂單預約總時數必填'],
+    min: [0, '訂單預約總時數不能小於 0']
+  },
   totalPrice: {
     type: Number,
     required: [true, '訂單預約總金額必填'],
