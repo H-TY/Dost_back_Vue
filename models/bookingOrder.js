@@ -1,6 +1,10 @@
 import { Schema, model } from 'mongoose'
 
 const bookingOrderData = new Schema({
+  bookingOrderNumber: {
+    type: String,
+    required: [true, '預約訂單編號必填']
+  },
   name: {
     type: String,
     required: [true, '訂單使用者名稱必填']
