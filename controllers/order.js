@@ -33,7 +33,7 @@ export const create = async (req, res) => {
 export const getAll = async (req, res) => {
   try {
     // 檢查是否有從前端傳入值 ↓
-    console.log('req.query.search', req.query.search)
+    // console.log('req.query.search', req.query.search)
 
     // 從前端傳入要搜尋的值，再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
     // 正則表達式主要用於搜尋 "文字/字串" 資料類型，可以搜尋部分符合的資料
@@ -70,8 +70,9 @@ export const getAll = async (req, res) => {
 
 export const get = async (req, res) => {
   try {
-    console.log('get_req.query.search', req.query.search)
-    console.log(typeof (req.query.search))
+    // console.log('get_req.query.search', req.query.search)
+    // console.log(typeof (req.query.search))
+
     // 因有要找到指定的相關資料，故從前端傳入要搜尋的值（req.query.search＝User.value）↓
     // const { data } = await apiAuth.get('/order',{
     //   params: {
@@ -99,7 +100,7 @@ export const get = async (req, res) => {
         data, total
       }
     })
-    console.log('data', data, 'total', total)
+    // console.log('data', data, 'total', total)
   } catch (error) {
     console.log(error)
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
