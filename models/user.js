@@ -40,7 +40,10 @@ const userData = new Schema({
   // 密碼
   password: {
     type: String,
-    required: [true, '密碼必填']
+    required: [true, '使用者密碼必填']
+  },
+  image: {
+    type: String
   },
   // E-mail
   email: {

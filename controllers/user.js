@@ -43,6 +43,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ _id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '7 days' })
     req.user.tokens.push(token) // 這邊的 tokens 指的是 models/user.js 所定義資料結構的 tokens
     await req.user.save() // 儲存進 DB 資料庫裡
+    // console.log(req.user)
     res.status(StatusCodes.OK).json({
       success: true,
       message: '',
@@ -50,6 +51,7 @@ export const login = async (req, res) => {
       result: {
         token,
         account: req.user.account,
+        image: req.user.image,
         role: req.user.role,
         cart: req.user.cartHave
       }
@@ -101,6 +103,7 @@ export const profile = (req, res) => {
         // 在 login 時，有回傳前端所需的資料 account、role、cart，這邊也一樣比照辦理
         // token 已經在前端了，故這邊不需要再回傳一次
         account: req.user.account,
+        image: req.user.image,
         role: req.user.role,
         cart: req.user.cartHave
       }
@@ -110,6 +113,54 @@ export const profile = (req, res) => {
       success: false,
       message: '未知錯誤'
     })
+  }
+}
+
+// 使用者編輯自己的資料
+export const edit = async (req, res) => {
+  // 若直接採用 req.user._id 輸出的值是 new ObjectId('66f6821663dbffffd0dcf98d')，並非"文字串/字符"，是 ObjectId 物件
+  // .toString() 轉成文字即可取到 66f6821663dbffffd0dcf98d
+  // console.log('req.user._id', req.user._id.toString())
+  // console.log('req.file?.path', req.file.path)
+  try {
+    if (!validator.isMongoId(req.user._id.toString())) throw new Error('ID')
+
+    req.body.image = req.file?.path
+
+    await Muser.findByIdAndUpdate(req.user._id.toString(), req.body, { runValidators: true }).orFail(new Error('NOT FOUND'))
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: '',
+      result: {
+        image: req.user.image
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    if (error.name === 'CastError' || error.message === 'ID') {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: '使用者 ID 格式錯誤'
+      })
+    } else if (error.message === 'NOT FOUND') {
+      res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: '查無使用者資訊'
+      })
+    } else if (error.name === 'ValidationError') {
+      const key = Object.keys(error.errors)[0]
+      const message = error.errors[key].message
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message
+      })
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: '未知錯誤'
+      })
+    }
   }
 }
 
