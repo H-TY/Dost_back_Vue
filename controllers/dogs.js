@@ -88,7 +88,7 @@ export const edit = async (req, res) => {
     // 這邊 file 的後面要接鏈結操作符 ?. 因為使用者可能沒有要更換圖片，這邊圖片沒有要求必須填寫
     req.body.image = req.file?.path
     // .findByIdAndUpdate 搜尋並更新
-    // 需先通過驗證 { runValidators: true }，再將參數 req.params.id，更新成 req.body，若失敗則拋出錯誤
+    // 需先通過驗證 { runValidators: true }，再將 req.params.id 作為搜尋關鍵詞，更新相對 id 的 req.body，若失敗則拋出錯誤
     await MdogsData.findByIdAndUpdate(req.params.id, req.body, { runValidators: true }).orFail(new Error('NOT FOUND'))
 
     res.status(StatusCodes.OK).json({

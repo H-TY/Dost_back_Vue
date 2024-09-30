@@ -127,13 +127,15 @@ export const edit = async (req, res) => {
 
     req.body.image = req.file?.path
 
-    await Muser.findByIdAndUpdate(req.user._id.toString(), req.body, { runValidators: true }).orFail(new Error('NOT FOUND'))
+    // 設置 new: true 返回更新後的使用者資料
+    const userUpdate = await Muser.findByIdAndUpdate(req.user._id.toString(), req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'))
+    // console.log('userUpdate.image', userUpdate.image)
 
     res.status(StatusCodes.OK).json({
       success: true,
       message: '',
       result: {
-        image: req.user.image
+        image: userUpdate.image
       }
     })
   } catch (error) {
