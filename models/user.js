@@ -42,7 +42,12 @@ const userData = new Schema({
     type: String,
     required: [true, '使用者密碼必填']
   },
+  // 使用者大頭照
   image: {
+    type: String
+  },
+  // 帳戶背景圖片
+  accountBgImage: {
     type: String
   },
   // E-mail

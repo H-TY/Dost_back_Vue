@@ -52,6 +52,7 @@ export const login = async (req, res) => {
         token,
         account: req.user.account,
         image: req.user.image,
+        accountBgImage: req.user.accountBgImage,
         role: req.user.role,
         cart: req.user.cartHave
       }
@@ -104,6 +105,7 @@ export const profile = (req, res) => {
         // token 已經在前端了，故這邊不需要再回傳一次
         account: req.user.account,
         image: req.user.image,
+        accountBgImage: req.user.accountBgImage,
         role: req.user.role,
         cart: req.user.cartHave
       }
@@ -121,21 +123,47 @@ export const edit = async (req, res) => {
   // 若直接採用 req.user._id 輸出的值是 new ObjectId('66f6821663dbffffd0dcf98d')，並非"文字串/字符"，是 ObjectId 物件
   // .toString() 轉成文字即可取到 66f6821663dbffffd0dcf98d
   // console.log('req.user._id', req.user._id.toString())
-  // console.log('req.file?.path', req.file.path)
+  // 因有複數欄位需上傳檔案，故在 middlewares/upload.js 轉換資料時，有個別的欄位名稱，故陣列名稱為 req.files
+  // req.files 輸出陣列為 ↓
+  // req.files[Object: null prototype] {
+  //   accountBgImage: [
+  //     {
+  //       fieldname: 'accountBgImage',
+  //       originalname: 'userPhoto03.jpg',
+  //       encoding: '7bit',
+  //       mimetype: 'image/jpeg',
+  //       path: 'https://res.cloudinary.com/dt10ltmkh/image/upload/v1727970646/kzasf1vcnorz0hebaxan.jpg',
+  //       size: 42888,
+  //       filename: 'kzasf1vcnorz0hebaxan'
+  //     }
+  //   ]
+  // }
+  // 從 req.files 解構出 image, accountBgImage
+  const { image, accountBgImage } = req.files
+  // console.log('image', image)
+  // console.log('accountBgImage', accountBgImage)
+  // console.log('accountBgImage?.[0].path', accountBgImage?.[0].path)
+  // console.log('req.body', req.body)
+
   try {
     if (!validator.isMongoId(req.user._id.toString())) throw new Error('ID')
 
-    req.body.image = req.file?.path
+    // 有上傳實體圖片（經 middlewares/upload.js 轉換過的資料） req.file?.path
+    // 恢復預設圖片（沒有上傳實體圖片，只有網址） req.body.image
+    req.body.image = image?.[0].path || req.body.image
+    req.body.accountBgImage = accountBgImage?.[0].path || req.body.accountBgImage
 
     // 設置 new: true 返回更新後的使用者資料
     const userUpdate = await Muser.findByIdAndUpdate(req.user._id.toString(), req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'))
     // console.log('userUpdate.image', userUpdate.image)
+    // console.log('userUpdate.accountBgImage', userUpdate.accountBgImage)
 
     res.status(StatusCodes.OK).json({
       success: true,
       message: '',
       result: {
-        image: userUpdate.image
+        image: userUpdate.image,
+        accountBgImage: userUpdate.accountBgImage
       }
     })
   } catch (error) {

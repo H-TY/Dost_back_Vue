@@ -25,7 +25,11 @@ const fileupload = multer({
 })
 
 export default (req, res, next) => {
-  fileupload.single('image')(req, res, error => {
+  // .fields([{欄位名稱, 單次上傳最大檔案數量}])處理多個不同欄位的檔案上傳
+  fileupload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'accountBgImage', maxCount: 1 }
+  ])(req, res, error => {
     if (error instanceof multer.MulterError) {
       let message = '上傳錯誤'
       if (error.code === 'LIMIT_FILE_SIZE') {
