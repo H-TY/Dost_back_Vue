@@ -73,6 +73,13 @@ export const get = async (req, res) => {
     // console.log('get_req.query.search', req.query.search)
     // console.log(typeof (req.query.search))
 
+    // 設定要排序的欄位名稱
+    // 因沒有從前端傳入 req.query.sortBy，故會採用 'bookingOrderNumber'
+    const sortBy = req.query.sortBy || 'bookingOrderNumber'
+    // 設定要排序的方式：asc 升冪（由小至大排序）；desc 降冪（由大至小排序）
+    // 因沒有從前端傳入 req.query.sortOrder，故會採用 'desc'
+    const sortOrder = req.query.sortOrder || 'desc'
+
     // 因有要找到指定的相關資料，故從前端傳入要搜尋的值（req.query.search＝User.value）↓
     // const { data } = await apiAuth.get('/order',{
     //   params: {
@@ -82,7 +89,7 @@ export const get = async (req, res) => {
     // 再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
     // 正則表達式主要用於搜尋 "文字/字串" 資料類型，可以搜尋部分符合的資料
     // 欄位的資料格式需確保為 "文字/字串" 類型，正則表達式才有作用
-    // 若 req.query.search 是 '' 空值，表示要搜尋並回傳前端所有資料
+    // 若 req.query.search 是 '' 空值，表示要搜尋所有資料並回傳前端
     const regex = new RegExp(req.query.search || '', 'i')
     const data = await MbookingOrderData
       // 搜尋功能，採用上述的 regex 的參數做關鍵字搜尋
@@ -90,8 +97,13 @@ export const get = async (req, res) => {
         // $or 符合其中一個條件即可
         $or: [
           { bookingOrderNumber: regex },
-          { accountName: regex }]
+          { accountName: regex }
+        ]
       })
+      // 將搜尋出來的資料做排序，可視為預先排序，當使用者開啟頁面即可看到預先排序過的資料
+      // 這邊設定以 bookingOrderNumber 做 desc 降冪排序
+      .sort({ [sortBy]: sortOrder })
+
     const total = await MbookingOrderData.estimatedDocumentCount()
     res.status(StatusCodes.OK).json({
       success: true,
