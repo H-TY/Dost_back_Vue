@@ -43,6 +43,10 @@ const bookingOrderData = new Schema({
   accountName: {
     type: String,
     required: [true, '帳戶名稱必填']
+  },
+  orderStatus: {
+    type: Boolean,
+    required: [true, '訂單狀態必填']
   }
 }, {
   timestamps: true,

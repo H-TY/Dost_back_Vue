@@ -36,6 +36,7 @@ const dogsData = new Schema({
   },
   counter: {
     type: Number,
+    required: [true, '點檯數字必填'],
     min: [0, '點檯數字不能小於 0']
   }
 }, {

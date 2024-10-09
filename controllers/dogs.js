@@ -4,8 +4,10 @@ import { StatusCodes } from 'http-status-codes'
 
 export const create = async (req, res) => {
   try {
-    // 先取出圖片，目前圖片位置在 req.file.path
-    req.body.image = req.file.path
+    // 從 req.files 解構出 image
+    const { image } = req.files
+    req.body.image = image?.[0].path || req.body.image
+
     const result = await MdogsData.create(req.body)
     res.status(StatusCodes.OK).json({
       success: true,

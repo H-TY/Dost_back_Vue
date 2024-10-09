@@ -34,6 +34,8 @@ export const getAll = async (req, res) => {
   try {
     // 檢查是否有從前端傳入值 ↓
     // console.log('req.query.search', req.query.search)
+    const sortBy = req.query.sortBy || 'bookingOrderNumber'
+    const sortOrder = req.query.sortOrder || 'desc'
 
     // 從前端傳入要搜尋的值，再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
     // 正則表達式主要用於搜尋 "文字/字串" 資料類型，可以搜尋部分符合的資料
@@ -51,6 +53,8 @@ export const getAll = async (req, res) => {
           { name: regex },
           { feature: regex }]
       })
+      .sort({ [sortBy]: sortOrder })
+
     const total = await MbookingOrderData.estimatedDocumentCount()
     res.status(StatusCodes.OK).json({
       success: true,
@@ -119,5 +123,49 @@ export const get = async (req, res) => {
       success: false,
       message: '未知錯誤'
     })
+  }
+}
+
+export const edit = async (req, res) => {
+  try {
+    // console.log('req.params.id', req.params.id)
+    if (!validator.isMongoId(req.params.id)) throw new Error('ID')
+
+    // .findByIdAndUpdate 搜尋並更新
+    // 需先通過驗證 { runValidators: true }，再將 req.params.id 作為搜尋關鍵詞，更新相對 id 的 req.body，若失敗則拋出錯誤
+    // 設置 new: true 返回更新後的使用者資料
+    const userUpdate = await MbookingOrderData.findByIdAndUpdate(req.params.id, req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'))
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: '',
+      result: {
+        orderStatus: userUpdate.orderStatus
+      }
+    })
+  } catch (error) {
+    if (error.name === 'CastError' || error.message === 'ID') {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: '訂單 ID 格式錯誤'
+      })
+    } else if (error.message === 'NOT FOUND') {
+      res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: '查無訂單資訊'
+      })
+    } else if (error.name === 'ValidationError') {
+      const key = Object.keys(error.errors)[0]
+      const message = error.errors[key].message
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message
+      })
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: '未知錯誤'
+      })
+    }
   }
 }
