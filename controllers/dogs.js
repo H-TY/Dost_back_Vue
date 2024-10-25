@@ -156,13 +156,28 @@ export const get = async (req, res) => {
       .sort({ [sortBy]: sortOrder })
       // Mongo DB 在分頁的處理方式，用 .skip()跳過幾筆資料 和 .limit()回傳幾筆資料
       // 如果一頁有 10 筆
-      // 第一頁 = 1 ~ 10 = 跳過 0 筆 = (第 1 頁 - 1) * 10 = 0
-      // 第二頁 = 11 ~ 20 = 跳過 10 筆 = (第 2 頁 - 1) * 10 = 10
-      // 第三頁 = 21 ~ 30 = 跳過 20 筆 = (第 3 頁 - 1) * 10 = 20
+      // 第一頁 = 1 ~ 10 筆 = 跳過 0 筆 = (第 1 頁 - 1) * 10 = 0
+      // 第二頁 = 11 ~ 20 筆 = 跳過 10 筆 = (第 2 頁 - 1) * 10 = 10
+      // 第三頁 = 21 ~ 30 筆 = 跳過 20 筆 = (第 3 頁 - 1) * 10 = 20
       .skip((page - 1) * itemsPerPage)
       .limit(itemsPerPage)
 
-    const total = await MdogsData.estimatedDocumentCount()
+    // console.log('搜尋後 data', data)
+
+    // .estimatedDocumentCount() 基於當前的所有數據進行估算，不需要掃描集合中的所有文檔，速度較快。
+    // const total = await MdogsData.estimatedDocumentCount()
+
+    // .countDocuments(query, options) 可指定搜尋關鍵字後的總資料數量
+    // ● 參數：
+    // - query（可選）：指定的查詢條件，用來篩選出符合條件的文檔。如果省略此參數，則默認為空查詢 { }，這意味著將計算集合中的所有文檔。
+    // - options（可選）：這是一個可選的對象，包含控制查詢行為的選項。常見的選項有：
+    //                    limit：限制返回的文檔數量。例如，limit: 5 將只返回最多 5 條文檔的計數。
+    //                    skip：跳過指定數量的文檔後開始計數。例如，skip: 10 將跳過前 10 個文檔後再進行計數。
+    //                    maxTimeMS：指定查詢的最大執行時間，單位是毫秒。如果查詢超過此時間限制，則會中止。
+    //                    hint：指定要用來執行查詢的索引，這可以在集合有多個索引時提高查詢性能。
+    const total = await MdogsData.countDocuments({ sell: true })
+    // console.log('搜尋後總資料數量', total)
+
     res.status(StatusCodes.OK).json({
       success: true,
       message: '',
