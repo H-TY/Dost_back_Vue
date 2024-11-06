@@ -4,11 +4,42 @@ import { StatusCodes } from 'http-status-codes'
 
 export const create = async (req, res) => {
   try {
-    // console.log('Request Body:', req.body)
+    // console.log('Request Body1:', req.body)
+
+    // 利用前端傳進來的當天日期，找尋訂單資料庫有沒有當日的最新訂單
+    const regex = new RegExp(req.query.reNowDate, 'i')
+    const data = await MbookingOrderData.find({ bookingOrderNumber: regex })
+    // console.log('data:', data)
+
+    // 找出後端訂單資料庫最新的訂單編號
+    // 若 data：［ ］，可用長度 data.length === 0 來判斷，回傳當天日期並加上流水號 '001'
+    // 若有資料可以抓取，用 .map() 抓出所有的 bookingOrderNumber 的值，組成新的陣列
+    // Number() 將資料類型轉成"數字類型"
+    // Math.max() 找出最大值，只能用數字做比較，且無法用於陣列，故需用 ... 將陣列展開
+    // 資料類型須為文字/字符/字符串.padStart(2, '0') 用零補足至 2 位數
+    // .padEnd(number.toString().length + 3, '0') 在數字後自動補 3 個零，第一個參數計算出字串長度再加上要補零的位數
+    const maxBookingOrderNumber = () => {
+      if (data.length === 0) {
+        // 搜尋後無當天訂單資料時，回傳前端當天日期數字+001 開始計算流水號
+        return req.query.reNowDate + '001'
+      } else {
+        // 若有抓到最新訂單編號，則最新編號 +1，並轉成符合資料庫可接受的文字資料類型
+        return (Math.max(...data.map(el => Number(el.bookingOrderNumber))) + 1).toString()
+      }
+    }
+
+    // 宣告訂單編號
+    // 執行上述函式 maxBookingOrderNumber() 建立最新的訂單編號
+    const bookingOrderNumber = maxBookingOrderNumber()
+    // 因 req.body 被設置為 [Object: null prototype] 的物件類型，可以用 Object.assign(A, B) 將 B 合併進 A物件
+    // 將宣告的變數用大括號 {} 包住，就會視為物件
+    Object.assign(req.body, { bookingOrderNumber })
+    // console.log('Request Body2:', req.body)
+
     const result = await MbookingOrderData.create(req.body)
     res.status(StatusCodes.OK).json({
       success: true,
-      message: '',
+      message: '預約成功',
       result
     })
   } catch (error) {
