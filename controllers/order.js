@@ -12,7 +12,7 @@ export const create = async (req, res) => {
     // console.log('data:', data)
 
     // 找出後端訂單資料庫最新的訂單編號
-    // 若 data：［ ］，可用長度 data.length === 0 來判斷，回傳當天日期並加上流水號 '001'
+    // 若資料庫回傳 data：［ ］ 空陣列，代表當日尚未建立訂單；可用長度 data.length === 0 來判斷，回傳當天日期並加上流水號 '001'
     // 若有資料可以抓取，用 .map() 抓出所有的 bookingOrderNumber 的值，組成新的陣列
     // Number() 將資料類型轉成"數字類型"
     // Math.max() 找出最大值，只能用數字做比較，且無法用於陣列，故需用 ... 將陣列展開
@@ -124,7 +124,7 @@ export const get = async (req, res) => {
     // 再藉由值找到相對應的資料後，利用 regex 正則表達式將相關資料一併找出回傳前端
     // 正則表達式主要用於搜尋 "文字/字串" 資料類型，可以搜尋部分符合的資料
     // 欄位的資料格式需確保為 "文字/字串" 類型，正則表達式才有作用
-    // 若 req.query.search 是 '' 空值，表示要搜尋所有資料並回傳前端
+    // 若 req.query.search 為前端傳來的參數，資料型態應為文字/文字串，若為 '' 空值，表示要搜尋所有資料並回傳前端
     const regex = new RegExp(req.query.search || '', 'i')
     const data = await MbookingOrderData
       // 搜尋功能，採用上述的 regex 的參數做關鍵字搜尋
@@ -198,5 +198,22 @@ export const edit = async (req, res) => {
         message: '未知錯誤'
       })
     }
+  }
+}
+
+// ● 計算訂單量最多的狗狗
+export const topOrder = async (req, res, next) => {
+  try {
+    // console.log('req.body', req.body)
+    const result = await req.body
+    // console.log('result', result)
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: '',
+      result
+    })
+  } catch (error) {
+    console.log('error', error)
   }
 }
