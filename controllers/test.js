@@ -204,7 +204,7 @@ export const edit = async (req, res) => {
 // ● 計算訂單量最多的狗狗
 export const topOrder = async (req, res, next) => {
   try {
-    console.log('ORreq.body', req.body)
+    // console.log('req.body', req.body)
     const result = await req.body
     // console.log('result', result)
 

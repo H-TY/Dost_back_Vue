@@ -1,6 +1,7 @@
 import MbookingOrderData from '../models/bookingOrder.js'
 
 // 計算 4 個月內的訂單，訂單數量最多的前 3 名狗狗
+// ☹︎ 有 bug，一旦 4 個月內沒資料，或是最後選出的資料少於 3 個，會報錯！
 export default async (req, res, next) => {
   try {
     // console.log('CO_req.query.reNowDate', req.query.reNowDate)
@@ -27,36 +28,22 @@ export default async (req, res, next) => {
     const regex = new RegExp(reFourMonth, 'i')
 
     // .find 指定搜尋訂單狀態有效，且訂單編號用 regex 做關鍵字搜尋
-    let data = await MbookingOrderData
+    // 但在 4 個月區間沒有資料
+    const data = await MbookingOrderData
       .find({
         orderStatus: true,
         bookingOrderNumber: regex
       })
-    // console.log('COdata', data)
+    console.log('COdata', data)
 
     // 計算狗狗名字在 data 個別出現的次數
     // 用 reduce 做迴圈累加
-    // acc 累加的值
     // 輸出的資料是物件
-    let countDogName = data.reduce((acc, el) => {
+    const countDogName = data.reduce((acc, el) => {
       acc[el.dogName] = (acc[el.dogName] || 0) + 1
       return acc
     }, {})
     // console.log('countDogName', countDogName)
-
-    // 但在 4 個月區間沒有資料、資料過少或是計算排名不足 3 名，則改為搜尋全部訂單
-    if (data.length === 0 || Object.keys(countDogName).length < 3) {
-      data = await MbookingOrderData
-        .find({
-          orderStatus: true
-        })
-      // console.log('ALLCOdata', data)
-
-      countDogName = data.reduce((acc, el) => {
-        acc[el.dogName] = (acc[el.dogName] || 0) + 1
-        return acc
-      }, {})
-    }
 
     // 排序並取前 3 位的資料，並轉成正則表達式做為搜尋的關鍵字
     const TopThree = Object.entries(countDogName)

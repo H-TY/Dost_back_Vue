@@ -31,7 +31,7 @@ const userData = new Schema({
     maxLength: [20, '使用者帳號文字最多 20 個字'],
     unique: true,
     validate: {
-      validator(value) {
+      validator (value) {
         return validator.isAlphanumeric(value)
       },
       message: '使用者帳號格式錯誤'
@@ -55,7 +55,7 @@ const userData = new Schema({
     type: String,
     required: [true, '信箱必填'],
     validate: {
-      validator(value) {
+      validator (value) {
         return validator.isEmail(value)
       },
       message: '使用者信箱格式錯誤'
