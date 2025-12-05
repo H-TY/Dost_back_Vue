@@ -11,13 +11,7 @@ cloudinary.config({
 
 // 處理要上傳的檔案
 const fileupload = multer({
-  storage: new CloudinaryStorage({
-    cloudinary,
-    params: {
-      folder: 'DOST', // 在 cloudinary 網站設有專案用的上傳資料夾
-      format: 'avif' // 圖片轉換成 avif 檔，並以此檔案格式儲存進 cloudinary
-    }
-  }),
+  storage: new CloudinaryStorage({ cloudinary }),
   fileFilter (req, file, callback) {
     if (['image/jpg', 'image/jpeg', 'image/png'].includes(file.mimetype)) {
       callback(null, true)
