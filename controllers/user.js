@@ -120,11 +120,14 @@ export const profile = (req, res) => {
 
 // 使用者編輯自己的資料
 export const edit = async (req, res) => {
+  // console.log('req.body', req.body)
   // 若直接採用 req.user._id 輸出的值是 new ObjectId('66f6821663dbffffd0dcf98d')，並非"文字串/字符"，是 ObjectId 物件
   // .toString() 轉成文字即可取到 66f6821663dbffffd0dcf98d
   // console.log('req.user._id', req.user._id.toString())
   // 因有複數欄位需上傳檔案，故在 middlewares/upload.js 轉換資料時，有個別的欄位名稱，故陣列名稱為 req.files
   // req.files 輸出陣列為 ↓
+  // console.log('req.files', req.files)
+
   // req.files[Object: null prototype] {
   //   accountBgImage: [
   //     {
@@ -162,6 +165,7 @@ export const edit = async (req, res) => {
       success: true,
       message: '',
       result: {
+        renewUserItem: req.body.fromCP, // 回傳給前端的資料，告知是更新使用者頭像還是背景圖片
         image: userUpdate.image,
         accountBgImage: userUpdate.accountBgImage
       }

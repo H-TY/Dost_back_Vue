@@ -11,33 +11,30 @@ cloudinary.config({
 
 // 處理要上傳的檔案
 const fileupload = multer({
-
   storage: new CloudinaryStorage({
     cloudinary,
     params: async (req) => {
-      const fromCP = req.body.fromCP
+      const fromCP = req.body.fromCP // 用來判斷上傳的圖片是儲存在 cloudinary 網站的哪一個資料夾
       // console.log('fromCP', fromCP)
 
       if (fromCP === 'userPhoto') {
         return {
-          folder: 'DOST/user_photo', // 在 cloudinary 網站設有專案用的上傳資料夾 DOST(裡面還有子資料夾)
-          format: 'avif' // 圖片轉換成 avif 檔，並以此檔案格式儲存進 cloudinary
+          folder: 'DOST/user_photo' // 在 cloudinary 網站設有專案用的上傳資料夾 DOST(裡面還有子資料夾)
         }
       } else if (fromCP === 'userAccountBg') {
         return {
-          folder: 'DOST/user_bg',
-          format: 'avif'
+          folder: 'DOST/user_bg'
         }
       } else {
         return {
-          folder: 'DOST/dog_img',
-          format: 'avif'
+          folder: 'DOST/dog_img'
         }
       }
-    }
+    },
+    format: 'avif' // 圖片轉換成 avif 檔，並以此檔案格式儲存進 cloudinary
   }),
   fileFilter (req, file, callback) {
-    if (['image/jpg', 'image/jpeg', 'image/png'].includes(file.mimetype)) {
+    if (['image/jpg', 'image/jpeg', 'image/png', 'image/avif'].includes(file.mimetype)) {
       callback(null, true)
     } else {
       callback(new Error('FORMAT'), false)
