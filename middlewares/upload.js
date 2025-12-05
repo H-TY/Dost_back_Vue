@@ -11,11 +11,29 @@ cloudinary.config({
 
 // 處理要上傳的檔案
 const fileupload = multer({
+
   storage: new CloudinaryStorage({
     cloudinary,
-    params: {
-      folder: 'DOST', // 在 cloudinary 網站設有專案用的上傳資料夾
-      format: 'avif' // 圖片轉換成 avif 檔，並以此檔案格式儲存進 cloudinary
+    params: async (req) => {
+      const fromCP = req.body.fromCP
+      // console.log('fromCP', fromCP)
+
+      if (fromCP === 'userPhoto') {
+        return {
+          folder: 'DOST/user_photo', // 在 cloudinary 網站設有專案用的上傳資料夾 DOST(裡面還有子資料夾)
+          format: 'avif' // 圖片轉換成 avif 檔，並以此檔案格式儲存進 cloudinary
+        }
+      } else if (fromCP === 'userAccountBg') {
+        return {
+          folder: 'DOST/user_bg',
+          format: 'avif'
+        }
+      } else {
+        return {
+          folder: 'DOST/dog_img',
+          format: 'avif'
+        }
+      }
     }
   }),
   fileFilter (req, file, callback) {
