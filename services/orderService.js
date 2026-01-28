@@ -1,3 +1,5 @@
+// 此檔案作為 "資料邏輯計算"，提供給 controllers 引用
+
 import MdogsData from '../models/dogsData.js';
 import MorderSerialNumberList from '../models/orderSerialNumberList.js';
 
@@ -11,13 +13,13 @@ export const generateBookingOrderNumber = async (data, date) => {
 	// 2. 使用 "原子操作（Atomic Operation）"：意思是「不可分割、一次完成的操作」，要麼完全成功，要麼完全不做，中間不會被其他操作打斷。
 	// .findOneAndUpdate(
 	//   filter,        // 找誰
-	//   update,        // 要怎麼改，$inc 原子遞增
+	//   update,        // 要怎麼改，$inc 原子遞增（$inc (increment) 操作符，是 MongoDB 的寫法）
 	//   options        // 設定
 	// )
 	const lastData = await MorderSerialNumberList.findOneAndUpdate(
-		{ orderDate: date }, // 下單日期
-		{ $inc: { seq: 1 } }, // 原子遞增
-		{ new: true, upsert: true } // 沒有就創建
+		{ orderDate: date }, // 尋找關鍵字 "訂單日期"
+		{ $inc: { seq: 1 } }, // 原子遞增，根據關鍵字找到的資料中，seq 值依序遞增 +1
+		{ new: true, upsert: true } // 沒有就創建；有就更新上述 seq 的值
 	);
 
 	const dateToNum = date.replace(/\//g, '');
@@ -59,15 +61,16 @@ export const calculateTotalBookingTime = async (data) => {
 };
 
 // ● 計算訂單總金額
-export const calculateTotalBookingPrice = async (data, totalTime) => {
+export const calculateTotalBookingPrice = async (data, dogId, totalTime) => {
 	// 用傳入的資料裡的 dogName，搜尋找出後端資料庫與此相關的狗狗資訊（包含價錢的資訊）
 	// 因目前資料庫狗狗價格是 2 小時的價格，故可以先將傳進來的總時數除以 2 再乘以價錢
 	const name = data.dogName;
 	// console.log('name', name);
+	// console.log('OS_dogId:', dogId);
 
 	// .find() 尋找多筆與關鍵字相同的資料，回傳 "陣列"，[{A...}, {B...}]，取用指定的值 Array[0].key
 	// .findOne() 只會搜尋到一筆資料，回傳 "物件"，{A...}，取用指定的值 Object.key
-	const findData = await MdogsData.findOne({ dogName: name });
+	const findData = await MdogsData.findOne({ _id: dogId });
 	if (!findData) {
 		throw new Error(`找不到狗狗資料：${name}`);
 	}

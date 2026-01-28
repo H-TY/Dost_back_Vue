@@ -16,9 +16,13 @@ import { StatusCodes } from 'http-status-codes';
 export const create = async (req, res) => {
 	try {
 		const data = req.body;
-		console.log('data:', data);
+		// console.log('data:', data);
+
+		// 從前端 params 傳入的關鍵字
 		const date = req.query.orderDate;
 		// console.log('date:', date);
+		const dogId = req.query.dogId;
+		// console.log('dogId:', dogId);
 
 		// ● 生成訂單編號
 		// 因函式裡有使用到 async，故在呼叫函式時也要用到 await
@@ -31,7 +35,7 @@ export const create = async (req, res) => {
 		// console.log('totalBookingTime:', totalBookingTime);
 
 		// ● 計算訂單總金額
-		const totalPrice = await calculateTotalBookingPrice(data, totalBookingTime);
+		const totalPrice = await calculateTotalBookingPrice(data, dogId, totalBookingTime);
 		// console.log('totalPrice:', totalPrice);
 
 		// 將上面的計算結果（訂單編號、總時數、總金額）併入 req.body
