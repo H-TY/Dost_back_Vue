@@ -10,7 +10,7 @@
 
 import validator from 'validator';
 import MbookingOrderData from '../models/bookingOrder.js';
-import { generateBookingOrderNumber, calculateTotalBookingTime, calculateTotalBookingPrice } from '../services/orderService.js';
+import { generateBookingOrderNumber, calculateTotalBookingTime, calculateTotalBookingPrice, calculateTopThreeOrder } from '../services/orderService.js';
 import { StatusCodes } from 'http-status-codes';
 
 export const create = async (req, res) => {
@@ -216,10 +216,18 @@ export const edit = async (req, res) => {
 };
 
 // ● 計算訂單量最多的狗狗
-export const topOrder = async (req, res, next) => {
+export const topOrder = async (req, res) => {
 	try {
-		// console.log('ORreq.body', req.body)
-		const result = await req.body;
+		const data = req.body;
+		// console.log('data:', data);
+
+		const date = req.query.date;
+		// console.log('date:', date);
+
+		const topThreeOrder = await calculateTopThreeOrder(date);
+		// console.log('topThreeOrder', topThreeOrder);
+
+		const result = topThreeOrder;
 		// console.log('result', result)
 
 		res.status(StatusCodes.OK).json({

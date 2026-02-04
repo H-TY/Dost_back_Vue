@@ -4,7 +4,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "db:find": "node migrations/DBupdate.js find",
+    "db:add": "node migrations/DBupdate.js add",
+    "db:remove": "node migrations/DBupdate.js remove"
   },
   "keywords": [],
   "author": "",
