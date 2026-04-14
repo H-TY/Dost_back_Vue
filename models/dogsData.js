@@ -1,8 +1,8 @@
 import { Schema, model } from 'mongoose';
 
 const dogsData = new Schema(
-	// =====【正式欄位】=====
 	{
+		// =====【正式欄位】=====
 		image: {
 			type: String,
 			required: [true, '狗狗圖片必填']
@@ -41,7 +41,7 @@ const dogsData = new Schema(
 		// 狗狗故事
 		story: {
 			type: String,
-			require: [true, '狗狗故事必填'],
+			required: [true, '狗狗故事必填'],
 			default: ''
 		},
 		// 疫苗接踵
@@ -50,22 +50,24 @@ const dogsData = new Schema(
 				{
 					name: {
 						type: String,
-						require: [true, '疫苗名稱必填寫']
+						required: [true, '疫苗名稱必填寫']
 					},
 					date: {
 						type: String,
-						require: [true, '接踵日期必填寫']
+						required: [true, '接踵日期必填寫']
 					},
-					hospital: { type: String }
+					hospital: {
+						type: String,
+						required: [true, '接踵醫院必填寫']
+					}
 				}
 			],
-			require: [true, '疫苗接踵必填'],
+			required: [true, '疫苗接踵記錄必填'],
 			default: []
-		}
-	},
-	// ★=====【試驗區】=====
-	// 未來 "新增欄位" 先放這邊測試，若後續確定會使用、不再變動，再升格成 "正式欄位"
-	{
+		},
+
+		// ★=====【試驗區】=====
+		// 未來 "新增欄位" 先放這邊測試，若後續確定會使用、不再變動，再升格成 "正式欄位"
 		extra: {
 			type: Schema.Types.Mixed,
 			default: {}

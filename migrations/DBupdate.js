@@ -11,6 +11,7 @@
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import MdogsData from '../models/dogsData.js';
+import MbookingOrderData from '../models/bookingOrder.js';
 
 async function connectDB() {
 	await mongoose.connect(process.env.DB_URL, {
@@ -21,17 +22,18 @@ async function connectDB() {
 	console.log(`目前已連線至 DB 資料庫，稍後執行 ${action} 指令`);
 }
 
-// ● 搜尋、查詢要 更新/移除 的欄位
+// ● "搜尋、查詢" 要更新/移除的欄位
+// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免查詢到其他資料庫的欄位
 export async function findField() {
 	await connectDB();
 	try {
-		const missingStoryField = await MdogsData.countDocuments({ story: { $exists: false } });
-		const missingVaccineField = await MdogsData.countDocuments({ vaccine: { $exists: false } });
-		const existingField = await MdogsData.countDocuments({ counter: { $exists: true } });
+		// const missingStoryField = await MdogsData.countDocuments({ story: { $exists: false } });
+		// const missingVaccineField = await MdogsData.countDocuments({ vaccine: { $exists: false } });
+		const existingField = await MbookingOrderData.countDocuments({ bookingTime: { $exists: true } });
 
-		console.log(`將新增 "狗狗故事" 欄位數量: ${missingStoryField}`);
-		console.log(`將新增 "疫苗接踵" 欄位數量: ${missingVaccineField}`);
-		console.log(`將移除 "點單數量" 欄位數量: ${existingField}`);
+		// console.log(`將新增 "狗狗故事" 欄位數量: ${missingStoryField}`);
+		// console.log(`將新增 "疫苗接踵" 欄位數量: ${missingVaccineField}`);
+		console.log(`將修改 "預約時段" 欄位數量: ${existingField}`);
 
 		// process.exit(code) 是 Node.js 的 結束程式指令，它會立即終止程式執行，並可帶一個 "退出碼（exit code）" 表示程式的狀態，用來告訴作業系統或其他程式「程式怎麼結束」。
 		// 慣例：
@@ -45,6 +47,7 @@ export async function findField() {
 }
 
 // ● 新增欄位
+// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
 export async function addField() {
 	await connectDB();
 	try {
@@ -59,7 +62,7 @@ export async function addField() {
 				}
 			}
 		);
-		console.log(`📌 已新增 "XX" 欄位數量: ${addOneField.modifiedCount}`);
+		console.log(`📌 已新增欄位數量: ${addOneField.modifiedCount}`);
 
 		process.exit(0);
 	} catch (error) {
@@ -68,7 +71,40 @@ export async function addField() {
 	}
 }
 
+// ● 修改/更新指定欄位
+// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+export async function updateField() {
+	await connectDB();
+
+	try {
+		const updateField = await MbookingOrderData.updateMany({ bookingTime: { $exists: true } }, [
+			{
+				$set: {
+					bookingTime: {
+						$cond: {
+							if: {
+								$and: [{ $isArray: '$bookingTime' }, { $eq: [{ $size: '$bookingTime' }, 1] }]
+							},
+							then: {
+								$split: [{ $arrayElemAt: ['$bookingTime', 0] }, ',']
+							},
+							else: '$bookingTime'
+						}
+					}
+				}
+			}
+		]);
+		console.log(`📌 已修改/更新欄位數量: ${updateField.modifiedCount}`);
+
+		process.exit(0);
+	} catch (error) {
+		console.log('❌ DB 資料庫 "修改/更新欄位" 發生錯誤:', error);
+		process.exit(1);
+	}
+}
+
 // ● 移除欄位
+// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
 export async function removeField() {
 	await connectDB();
 	try {
@@ -110,9 +146,11 @@ if (action === 'find') {
 	findField();
 } else if (action === 'add') {
 	addField();
+} else if (action === 'update') {
+	updateField();
 } else if (action === 'remove') {
 	removeField();
 } else {
-	console.log('請在 npm run 尾部輸入指令：查詢 db:find、新增欄位 db:add、移除欄位 db:remove');
+	console.log('請在 npm run 尾部輸入指令：查詢 db:find、新增欄位 db:add、修改/更新欄位 db:update、移除欄位 db:remove');
 	process.exit(1);
 }

@@ -16,7 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 export const create = async (req, res) => {
 	try {
 		const data = req.body;
-		// console.log('data:', data);
+		// console.log('controllers_order_create_data:', data);
 
 		// 從前端 params 傳入的關鍵字
 		const date = req.query.orderDate;
@@ -72,7 +72,7 @@ export const create = async (req, res) => {
 		} else {
 			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				success: false,
-				message: '未知錯誤'
+				message: '新建訂單存入資料庫時，發生未知錯誤'
 			});
 		}
 	}

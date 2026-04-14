@@ -9,6 +9,7 @@ import Ruser from './routes/user.js';
 import Rdogs from './routes/dogs.js';
 import Rorder from './routes/order.js';
 import './passport/passport.js';
+// import dns from 'node:dns'; // ★ 有修正 Node.js 24+ 上的 querySrv ECONNREFUSED 錯誤，才引用
 
 const app = express();
 
@@ -77,8 +78,14 @@ app.all('*', (req, res) => {
 
 app.listen(process.env.PORT || 4000, async () => {
 	console.log('伺服器啟動');
+
 	await mongoose.connect(process.env.DB_URL);
+
 	// sanitizeFilter：mongoose 內建的消毒語法（因 mongoDB 的物件為美金符號 "$" 開頭，任何人都可以藉由這個方式執行動作，會有資料安全的問題，故將美金符號開頭的東西加上東西）
 	mongoose.set('sanitizeFilter', true);
+
 	console.log('DB 資料庫連線成功');
 });
+
+// ★ 修正 Node.js 24+ 上的 querySrv ECONNREFUSED 錯誤 - 使用 Cloudflare DNS 進行 SRV 查詢
+// dns.setServers(['8.8.8.8', '1.1.1.1']);

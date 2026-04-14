@@ -32,10 +32,9 @@ export const generateBookingOrderNumber = async (data, date) => {
 
 // ● 計算訂單預約總時數
 export const calculateTotalBookingTime = async (data) => {
-	// 目前資料格式輸入為 { bookingTime: '10:00～12:00,13:00～15:00', .... }，值的類型是字串
-	// 要先轉成陣列後，再拆分成 "時間、分鐘" 的物件
+	// 目前資料格式輸入為 { bookingTime: ['10:00～12:00', '13:00～15:00'], .... }，值的類型是陣列
 	const time = data.bookingTime;
-	// console.log('time', time); // 輸出 '10:00～12:00,13:00～15:00'
+	// console.log('orderService_calculateTotalBookingTime_time', time);
 
 	// 小時轉分鐘計算函式
 	function hourToMinutes(passInData) {
@@ -43,20 +42,17 @@ export const calculateTotalBookingTime = async (data) => {
 		return hour * 60 + minu; // 10 小時 * 60分鐘 + 0分鐘 = 600 分鐘
 	}
 
-	// 使用累加計算總時數 .reduce()
-	const TotalHour = time
-		// .split() 拆成「時段陣列」：['10:00～12:00', '13:00～15:00']
-		.split(',')
-		// 累加計算 .reduce((累積值, 當前元素)=> { return 新的累積值 }, 初始值)
-		.reduce((total, el) => {
-			// el 是要迴圈的元素，指的就是 '10:00～12:00' 和 '13:00～15:00'
-			// .split('～') 注意要依據切開的元素，半形和全形是被視為不同的
-			// 使用 "陣列解構（Array Destructuring）"，把「解構」想成「位置對應」
-			const [start, end] = el.split('～'); // 輸出 ['10:00', '12:00']
-			const hourA = hourToMinutes(start); // 600 分鐘
-			const hourB = hourToMinutes(end); // 720 分鐘
-			return total + (hourB - hourA) / 60; // 第一個迴圈會回傳 2
-		}, 0);
+	// 使用累加計算總時數
+	// 累加計算 .reduce((累積值, 當前元素)=> { return 新的累積值 }, 初始值)
+	const TotalHour = time.reduce((total, el) => {
+		// el 是要迴圈的元素，指的就是 '10:00～12:00' 和 '13:00～15:00'
+		// .split('～') 注意要依據切開的元素，半形和全形是被視為不同的
+		// 使用 "陣列解構（Array Destructuring）"，把「解構」想成「位置對應」
+		const [start, end] = el.split('～'); // 輸出 ['10:00', '12:00']
+		const hourA = hourToMinutes(start); // 600 分鐘
+		const hourB = hourToMinutes(end); // 720 分鐘
+		return total + (hourB - hourA) / 60; // 第一個迴圈會回傳 2
+	}, 0);
 
 	return TotalHour;
 };
