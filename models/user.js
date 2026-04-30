@@ -51,6 +51,40 @@ const userData = new Schema(
 		accountBgImage: {
 			type: String
 		},
+		// 暱稱
+		nickname: {
+			type: String,
+			default: null, // 系統默認：欄位存在，但明確表示「目前沒有值」
+			// required: [true, '暱稱必填'],
+			unique: true,
+			minLength: [4, '暱稱文字最少 4 個字'],
+			maxLength: [20, '暱稱文字最多 20 個字'],
+			validate: {
+				validator(value) {
+					// ✔ 空值直接放行
+					if (value === null || value === undefined) return true;
+
+					// ✔ 長度檢查（避免 minLength 提前炸）
+					if (value.length < 4 || value.length > 20) return false;
+
+					// ✔ 格式檢查
+					return validator.isAlphanumeric(value);
+				},
+				message: '暱稱格式錯誤'
+			}
+		},
+		// 電話
+		phone: {
+			type: String,
+			default: null
+			// required: [true, '電話必填']
+		},
+		// 生日
+		birthday: {
+			type: String,
+			default: null
+			// required: [true, '生日必填']
+		},
 		// E-mail
 		email: {
 			type: String,

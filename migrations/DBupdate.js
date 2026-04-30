@@ -10,6 +10,7 @@
 
 import mongoose from 'mongoose';
 import 'dotenv/config';
+import UserData from '../models/user.js';
 import MdogsData from '../models/dogsData.js';
 import MbookingOrderData from '../models/bookingOrder.js';
 
@@ -23,17 +24,19 @@ async function connectDB() {
 }
 
 // ● "搜尋、查詢" 要更新/移除的欄位
-// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免查詢到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免查詢到其他資料庫的欄位
 export async function findField() {
 	await connectDB();
 	try {
-		// const missingStoryField = await MdogsData.countDocuments({ story: { $exists: false } });
-		// const missingVaccineField = await MdogsData.countDocuments({ vaccine: { $exists: false } });
-		const existingField = await MbookingOrderData.countDocuments({ bookingTime: { $exists: true } });
+		// const phoneExistingField = await UserData.countDocuments({ phone: { $exists: true } });
+		const existingField = await UserData.countDocuments({
+			nickname: { $exists: true },
+			phone: { $exists: true },
+			birthday: { $exists: true }
+		});
 
-		// console.log(`將新增 "狗狗故事" 欄位數量: ${missingStoryField}`);
-		// console.log(`將新增 "疫苗接踵" 欄位數量: ${missingVaccineField}`);
-		console.log(`將修改 "預約時段" 欄位數量: ${existingField}`);
+		console.log(`將新增欄位的資料數量: ${existingField}`);
+		// console.log(`將修改 "phone" 欄位資料數量: ${phoneExistingField}`);
 
 		// process.exit(code) 是 Node.js 的 結束程式指令，它會立即終止程式執行，並可帶一個 "退出碼（exit code）" 表示程式的狀態，用來告訴作業系統或其他程式「程式怎麼結束」。
 		// 慣例：
@@ -47,18 +50,25 @@ export async function findField() {
 }
 
 // ● 新增欄位
-// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
 export async function addField() {
 	await connectDB();
 	try {
 		// ● $set: {} 新增欄位
 		// 先搜尋是否有指定的欄位存在（目前是指定 story 和 vaccine 的欄位），不存在就新增欄位（新增的欄位可以設定預設值）
 		// 建議要新增 key 欄位寫成一個程式碼，避免覆蓋掉已經有相對應的 key 的值
-		const addOneField = await MdogsData.updateMany(
-			{ story: { $exists: false } },
+		const addOneField = await UserData.updateMany(
+			// 以下寫法，當一筆資料要同時缺失以下欄位，才會進行後續新增欄位的動作
+			{
+				nickname: { $exists: false },
+				phone: { $exists: false },
+				birthday: { $exists: false }
+			},
 			{
 				$set: {
-					story: ''
+					nickname: '',
+					phone: '',
+					birthday: ''
 				}
 			}
 		);
@@ -72,28 +82,39 @@ export async function addField() {
 }
 
 // ● 修改/更新指定欄位
-// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
 export async function updateField() {
 	await connectDB();
 
 	try {
-		const updateField = await MbookingOrderData.updateMany({ bookingTime: { $exists: true } }, [
-			{
-				$set: {
-					bookingTime: {
-						$cond: {
-							if: {
-								$and: [{ $isArray: '$bookingTime' }, { $eq: [{ $size: '$bookingTime' }, 1] }]
-							},
-							then: {
-								$split: [{ $arrayElemAt: ['$bookingTime', 0] }, ',']
-							},
-							else: '$bookingTime'
-						}
-					}
-				}
-			}
-		]);
+		// const updateField = await MbookingOrderData.updateMany({ bookingTime: { $exists: true } }, [
+		// 	{
+		// 		$set: {
+		// 			bookingTime: {
+		// 				$cond: {
+		// 					if: {
+		// 						$and: [{ $isArray: '$bookingTime' }, { $eq: [{ $size: '$bookingTime' }, 1] }]
+		// 					},
+		// 					then: {
+		// 						$split: [{ $arrayElemAt: ['$bookingTime', 0] }, ',']
+		// 					},
+		// 					else: '$bookingTime'
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// ]);
+
+		// const updateField = await UserData.updateMany({}, [
+		// 	{
+		// 		$set: {
+		// 			nickname: null,
+		// 			phone: null,
+		// 			birthday: null
+		// 		}
+		// 	}
+		// ]);
+
 		console.log(`📌 已修改/更新欄位數量: ${updateField.modifiedCount}`);
 
 		process.exit(0);
@@ -104,7 +125,7 @@ export async function updateField() {
 }
 
 // ● 移除欄位
-// ★ 請先確認 "資料庫名稱"（MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
 export async function removeField() {
 	await connectDB();
 	try {
