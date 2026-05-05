@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as auth from '../middlewares/auth.js';
-// import upload from '../middlewares/upload.js'
+import upload from '../middlewares/upload.js'; // 用來解析前端傳來的 form-data 資料（包含圖片資料）
 import { create, getId, edit } from '../controllers/dogs.js';
 
 const router = Router();

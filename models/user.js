@@ -77,13 +77,11 @@ const userData = new Schema(
 		phone: {
 			type: String,
 			default: null
-			// required: [true, '電話必填']
 		},
 		// 生日
 		birthday: {
 			type: String,
 			default: null
-			// required: [true, '生日必填']
 		},
 		// E-mail
 		email: {

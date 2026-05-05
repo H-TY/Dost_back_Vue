@@ -137,27 +137,12 @@ export const profile = (req, res) => {
 
 // ● 使用者編輯自己的資料並更新資料庫
 export const edit = async (req, res) => {
-	// console.log('req.body', req.body)
-	// 若直接採用 req.user._id 輸出的值是 new ObjectId('66f6821663dbffffd0dcf98d')，並非"文字串/字符"，是 ObjectId 物件
-	// .toString() 轉成文字即可取到 66f6821663dbffffd0dcf98d
-	// console.log('req.user._id', req.user._id.toString())
-	// 因有複數欄位需上傳檔案，故在 middlewares/upload.js 轉換資料時，有個別的欄位名稱，故陣列名稱為 req.files
-	// req.files 輸出陣列為 ↓
-	// console.log('req.files', req.files)
+	// console.log('edit_req.body', req.body);
 
-	// req.files[Object: null prototype] {
-	//   accountBgImage: [
-	//     {
-	//       fieldname: 'accountBgImage',
-	//       originalname: 'userPhoto03.jpg',
-	//       encoding: '7bit',
-	//       mimetype: 'image/jpeg',
-	//       path: 'https://res.cloudinary.com/dt10ltmkh/image/upload/v1727970646/kzasf1vcnorz0hebaxan.jpg',
-	//       size: 42888,
-	//       filename: 'kzasf1vcnorz0hebaxan'
-	//     }
-	//   ]
-	// }
+	// 取前端放在 URL 路徑（path param）裡的 id 值
+	const userID = req.params.id;
+	// console.log('edit_userID', userID);
+
 	// 從 req.files 解構出 image, accountBgImage
 	const { image, accountBgImage } = req.files;
 	// console.log('image', image)
@@ -166,7 +151,7 @@ export const edit = async (req, res) => {
 	// console.log('req.body', req.body)
 
 	try {
-		if (!validator.isMongoId(req.user._id.toString())) throw new Error('ID');
+		if (!validator.isMongoId(userID)) throw new Error('ID');
 
 		// 有上傳實體圖片（經 middlewares/upload.js 轉換過的資料） req.file?.path
 		// 恢復預設圖片（沒有上傳實體圖片，只有網址） req.body.image
@@ -174,7 +159,8 @@ export const edit = async (req, res) => {
 		req.body.accountBgImage = accountBgImage?.[0].path || req.body.accountBgImage;
 
 		// 設置 new: true 返回更新後的使用者資料
-		const userUpdate = await Muser.findByIdAndUpdate(req.user._id.toString(), req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'));
+		const userUpdate = await Muser.findByIdAndUpdate(userID, req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'));
+		// console.log('userUpdate', userUpdate);
 		// console.log('userUpdate.image', userUpdate.image)
 		// console.log('userUpdate.accountBgImage', userUpdate.accountBgImage)
 
@@ -182,9 +168,8 @@ export const edit = async (req, res) => {
 			success: true,
 			message: '',
 			result: {
-				renewUserItem: req.body.fromCP, // 回傳給前端的資料，告知是更新使用者頭像還是背景圖片
-				image: userUpdate.image,
-				accountBgImage: userUpdate.accountBgImage
+				userUpdate, // 回傳給前端更新後的資料，
+				renewUserItem: req.body.fromCP // 回傳給前端的資料，告知是更新使用者頭像還是背景圖片
 			}
 		});
 	} catch (error) {
