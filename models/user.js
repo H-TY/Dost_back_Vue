@@ -64,11 +64,13 @@ const userData = new Schema(
 					// ✔ 空值直接放行
 					if (value === null || value === undefined) return true;
 
-					// ✔ 長度檢查（避免 minLength 提前炸）
-					if (value.length < 4 || value.length > 20) return false;
+					// ✔ 格式檢查：
+					// 自訂可以輸入的格式：允許所有 語言文字、數字、底線(_)、加號(+)、減號(-)，並使用 Unicode 模式解析 \p{} Unicode 屬性，避免壞掉。
+					// 此寫法 JavaScript 原生 RegExp
+					return /^(?=.*[\p{L}\p{N}])[\p{L}\p{N}_+\-]+$/u.test(value);
 
-					// ✔ 格式檢查
-					return validator.isAlphanumeric(value);
+					// 系統預設驗證：只允許英文或數字（不包含中文、底線）
+					// return validator.isAlphanumeric(value);
 				},
 				message: '暱稱格式錯誤'
 			}
