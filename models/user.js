@@ -1,9 +1,15 @@
+// ● 資料庫的資料建立流程（很像「工廠」概念）：
+// step 1. Schema = 設計圖（定義資料規格）
+// step 2. Model = 工廠（操作資料庫的查詢、新增、刪除、更新）
+// step 3. Document = 生產出來的實體物件（最終產出的資料）
+// 結論：Model 依照 Schema 建立規則，並產生 Document 物件。
+
 import { Schema, model, ObjectId, Error } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import UserRole from '../enums/UserRole.js';
 
-// Schema 定義資料結構，並輸出成 model 物件，用於驗證資料類型
+// Schema 定義資料／驗證結構，提供 model 依據此定義操作資料庫
 
 // 購物車資料定義
 const cartSchema = new Schema({
