@@ -14,6 +14,15 @@ import './passport/passport.js';
 
 const app = express();
 
+// 取得真實使用者 IP，不然所有進網站的使用者都視為同一 IP，這也是要
+app.set('trust proxy', 1);
+
+// 喚醒伺服器（目前設在 render 網站，但此網站有休眠機制），需要設定喚醒的 API 讓伺服器保持醒著狀態
+// 開發階段可以在瀏覽器網址列輸入：http://localhost:4000/ping （注意！前後端的 express 的網址是不一樣的）
+app.get('/ping', (req, res) => {
+	res.status(200).send('OK 已喚醒 render 伺服器！');
+});
+
 // 一段時間內超過限制請求次數，封掉發請求的 IP
 app.use(
 	rateLimit({
