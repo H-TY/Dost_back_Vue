@@ -9,6 +9,7 @@ import Ruser from './routes/user.js';
 import Rdogs from './routes/dogs.js';
 import Rorder from './routes/order.js';
 import RuserSetting from './routes/userSetting.js';
+import RbookingDateCollection from './routes/bookingDateCollection.js';
 import './passport/passport.js';
 // import dns from 'node:dns'; // ★ 有修正 Node.js 24+ 上的 querySrv ECONNREFUSED 錯誤，才引用
 
@@ -79,6 +80,7 @@ app.use('/user', Ruser);
 app.use('/userSetting', RuserSetting);
 app.use('/dogs', Rdogs);
 app.use('/order', Rorder);
+app.use('/bookingDateCollection', RbookingDateCollection);
 // 當不符合上述路徑的請求處理的東西，都會進入 app.all()
 app.all('*', (req, res) => {
 	res.status(StatusCodes.NOT_FOUND).json({

@@ -13,6 +13,7 @@ import 'dotenv/config';
 import UserData from '../models/user.js';
 import MdogsData from '../models/dogsData.js';
 import MbookingOrderData from '../models/bookingOrder.js';
+import MbookingDateCollectionData from '../models/bookingDateCollection.js';
 
 async function connectDB() {
 	await mongoose.connect(process.env.DB_URL, {
@@ -24,18 +25,17 @@ async function connectDB() {
 }
 
 // ● "搜尋、查詢" 要更新/移除的欄位
-// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免查詢到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData、MbookingDateCollectionData）是否正確，避免查詢到其他資料庫的欄位
 export async function findField() {
 	await connectDB();
 	try {
 		// const phoneExistingField = await UserData.countDocuments({ phone: { $exists: true } });
-		const existingField = await UserData.countDocuments({
-			nickname: { $exists: true },
-			phone: { $exists: true },
-			birthday: { $exists: true }
+		const existingField = await MbookingDateCollectionData.countDocuments({
+			dogId: { $exists: true },
+			dogId: null // 意思：找尋 dogId 的值是 null 的欄位
 		});
 
-		console.log(`將新增欄位的資料數量: ${existingField}`);
+		console.log(`即將新增/修改欄位的資料數量: ${existingField}`);
 		// console.log(`將修改 "phone" 欄位資料數量: ${phoneExistingField}`);
 
 		// process.exit(code) 是 Node.js 的 結束程式指令，它會立即終止程式執行，並可帶一個 "退出碼（exit code）" 表示程式的狀態，用來告訴作業系統或其他程式「程式怎麼結束」。
@@ -50,7 +50,7 @@ export async function findField() {
 }
 
 // ● 新增欄位
-// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData、MbookingDateCollectionData）是否正確，避免誤修改到其他資料庫的欄位
 export async function addField() {
 	await connectDB();
 	try {
@@ -82,29 +82,37 @@ export async function addField() {
 }
 
 // ● 修改/更新指定欄位
-// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData、MbookingDateCollectionData）是否正確，避免誤修改到其他資料庫的欄位
 export async function updateField() {
 	await connectDB();
 
 	try {
-		// const updateField = await MbookingOrderData.updateMany({ bookingTime: { $exists: true } }, [
-		// 	{
-		// 		$set: {
-		// 			bookingTime: {
-		// 				$cond: {
-		// 					if: {
-		// 						$and: [{ $isArray: '$bookingTime' }, { $eq: [{ $size: '$bookingTime' }, 1] }]
-		// 					},
-		// 					then: {
-		// 						$split: [{ $arrayElemAt: ['$bookingTime', 0] }, ',']
-		// 					},
-		// 					else: '$bookingTime'
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// ]);
+		// const dogData = await MdogsData.find();
 
+		// console.log('dogData:', dogData);
+
+		// const dogMap = new Map();
+
+		// for (const el of dogData) {
+		// 	dogMap.set(el.dogName, el._id);
+		// }
+
+		// console.log('dogMap:', dogMap);
+
+		// let totalUpdateField = 0; // 用來計算已更新的欄位數量
+
+		// for (const [dogName, dogId] of dogMap) {
+		// 	const result = await MbookingDateCollectionData.updateMany(
+		// 		{ dogName },
+		// 		{
+		// 			$set: { dogId }
+		// 		}
+		// 	);
+
+		// 	totalUpdateField += result.modifiedCount;
+		// }
+
+		// ================
 		// const updateField = await UserData.updateMany({}, [
 		// 	{
 		// 		$set: {
@@ -115,7 +123,17 @@ export async function updateField() {
 		// 	}
 		// ]);
 
+		// ================
+		// const updateField = await MbookingDateCollectionData.updateMany(
+		// 	{ dogName: 'aaa' },
+		// 	{
+		// 		$set: { dogId: '66c21e8e95af406f50b41ca1' }
+		// 	}
+		// );
+
 		console.log(`📌 已修改/更新欄位數量: ${updateField.modifiedCount}`);
+
+		// console.log('📌 已修改/更新欄位數量:', totalUpdateField);
 
 		process.exit(0);
 	} catch (error) {
@@ -125,7 +143,7 @@ export async function updateField() {
 }
 
 // ● 移除欄位
-// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData）是否正確，避免誤修改到其他資料庫的欄位
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData、MbookingDateCollectionData）是否正確，避免誤修改到其他資料庫的欄位
 export async function removeField() {
 	await connectDB();
 	try {
@@ -151,6 +169,47 @@ export async function removeField() {
 	}
 }
 
+// ● 在資料庫建立新檔案
+// ★ 請先確認 "資料庫名稱"（UserData、MdogsData、MbookingOrderData、MbookingDateCollectionData）是否正確，避免誤修改到其他資料庫的欄位
+export async function createFile() {
+	await connectDB();
+
+	try {
+		const orders = await MbookingOrderData.find();
+
+		for (const el of orders) {
+			const times = Array.isArray(el.bookingTime) ? el.bookingTime : [el.bookingTime];
+
+			for (const time of times) {
+				// 語法 .updateOne(filter, update, options)
+				await MbookingDateCollectionData.updateOne(
+					{
+						dogId: el.dogId ?? null,
+						dogName: el.dogName,
+						bookingDate: el.bookingDate,
+						bookingTime: time
+					},
+					{
+						$setOnInsert: {
+							dogId: el.dogId ?? null,
+							dogName: el.dogName,
+							bookingDate: el.bookingDate,
+							bookingTime: time
+						}
+					},
+					{ upsert: true }
+				);
+			}
+		}
+
+		console.log('新檔案建立成功');
+		process.exit(0);
+	} catch (error) {
+		console.log('❌ DB 資料庫 "建立新檔案" 發生錯誤:', error);
+		process.exit(1);
+	}
+}
+
 // ----------------------------
 // ● 在終端機，透過命令列參數決定要執行哪個函式
 // ----------------------------
@@ -171,7 +230,9 @@ if (action === 'find') {
 	updateField();
 } else if (action === 'remove') {
 	removeField();
+} else if (action === 'createFile') {
+	createFile();
 } else {
-	console.log('請在 npm run 尾部輸入指令：查詢 db:find、新增欄位 db:add、修改/更新欄位 db:update、移除欄位 db:remove');
+	console.log('請在 npm run 尾部輸入指令 => 查詢 db:find、新增欄位 db:add、修改/更新欄位 db:update、移除欄位 db:remove、新建檔案 db:createFile');
 	process.exit(1);
 }

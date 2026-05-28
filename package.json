@@ -8,7 +8,8 @@
     "db:find": "node migrations/DBupdate.js find",
     "db:add": "node migrations/DBupdate.js add",
     "db:update": "node migrations/DBupdate.js update",
-    "db:remove": "node migrations/DBupdate.js remove"
+    "db:remove": "node migrations/DBupdate.js remove",
+    "db:createFile": "node migrations/DBupdate.js createFile"
   },
   "keywords": [],
   "author": "",
