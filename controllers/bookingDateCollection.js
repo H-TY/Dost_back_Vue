@@ -2,13 +2,17 @@ import validator from 'validator';
 import MbookingDateCollectionData from '../models/bookingDateCollection.js';
 import { StatusCodes } from 'http-status-codes';
 
+// 資料庫建檔
 export const create = async (req, res) => {
 	try {
 		const data = req.body;
-		console.log('bookingDateCollectionData_creat_data', data);
+		// console.log('bookingDateCollectionData_creat_data', data);
 
 		// ● 將檔案新增進 BD 資料庫
-		const result = await MbookingDateCollectionData.create(data);
+		// .create() 「單筆資料建立」的語法
+		// .insertMany() 「一次新增多筆資料」的語法
+		const result = await MbookingDateCollectionData.insertMany(data);
+		// console.log('bookingDateCollectionData_creat_result', result);
 
 		res.status(StatusCodes.OK).json({
 			success: true,
@@ -38,19 +42,36 @@ export const create = async (req, res) => {
 // 查詢資料庫
 export const get = async (req, res) => {
 	try {
-		const data = req.body;
-		console.log('bookingDateCollectionData_get_data', data);
+		// const data = req.body;
+		// console.log('bookingDateCollectionData_get_data', data);
+
+		const dogId = req.query.dogId;
+		const YearMonth = req.query.dateYM;
+		// console.log('dogId', dogId);
+		// console.log('YearMonth', YearMonth);
+
+		const regexYearMonth = new RegExp(YearMonth);
+
+		const result = await MbookingDateCollectionData.find({
+			dogId,
+			bookingDate: regexYearMonth
+		});
+		// console.log('result', result);
+
+		if (result.length === 0) {
+			res.status(StatusCodes.OK).json({
+				success: true,
+				message: '資料庫無資料！',
+				result
+			});
+		} else {
+			res.status(StatusCodes.OK).json({
+				success: true,
+				message: '已成功抓取到資料',
+				result
+			});
+		}
 	} catch (error) {
 		console.log('bookingDateCollectionData_get_ERROR', error);
-	}
-};
-
-// 更新資料庫
-export const update = async (req, res) => {
-	try {
-		const data = req.body;
-		console.log('bookingDateCollectionData_update_data', data);
-	} catch (error) {
-		console.log('bookingDateCollectionData_update_ERROR', error);
 	}
 };
