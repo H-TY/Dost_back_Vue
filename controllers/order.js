@@ -184,9 +184,7 @@ export const edit = async (req, res) => {
 		res.status(StatusCodes.OK).json({
 			success: true,
 			message: '',
-			result: {
-				orderStatus: userUpdate.orderStatus
-			}
+			userUpdate
 		});
 	} catch (error) {
 		if (error.name === 'CastError' || error.message === 'ID') {

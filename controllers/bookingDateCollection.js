@@ -75,3 +75,37 @@ export const get = async (req, res) => {
 		console.log('bookingDateCollectionData_get_ERROR', error);
 	}
 };
+
+// 刪除預約時段資料（依據已取消訂單）
+export const deleteData = async (req, res) => {
+	try {
+		const data = req.body;
+		// console.log('bookingDateCollectionData_deleteData_data', data);
+
+		// 刪除多筆資料，使用 deleteMany() 方法，並使用 $or 條件來匹配多個條件
+		const result = await MbookingDateCollectionData.deleteMany({
+			$or: data.map((el) => ({
+				dogId: el.dogId,
+				bookingDate: el.bookingDate,
+				bookingTime: el.bookingTime
+			}))
+		});
+
+		// console.log('bookingDateCollectionData_deleteData_result', result);
+
+		if (result.deletedCount === 0) {
+			res.status(StatusCodes.OK).json({
+				success: true,
+				message: '資料庫無符合條件的資料可刪除！'
+			});
+		} else {
+			res.status(StatusCodes.OK).json({
+				success: true,
+				message: '已成功刪除預約時段資料',
+				result
+			});
+		}
+	} catch (error) {
+		console.log('bookingDateCollectionData_deleteData_ERROR', error);
+	}
+};
