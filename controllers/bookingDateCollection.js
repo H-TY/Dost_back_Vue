@@ -50,6 +50,10 @@ export const get = async (req, res) => {
 		// console.log('dogId', dogId);
 		// console.log('YearMonth', YearMonth);
 
+		if (!dogId || !YearMonth) {
+			throw new Error('dogId 或 dateYM 數值格式錯誤、空字串或缺漏');
+		}
+
 		const regexYearMonth = new RegExp(YearMonth);
 
 		const result = await MbookingDateCollectionData.find({
@@ -73,6 +77,11 @@ export const get = async (req, res) => {
 		}
 	} catch (error) {
 		console.log('bookingDateCollectionData_get_ERROR', error);
+
+		res.status(StatusCodes.BAD_REQUEST).json({
+			success: false,
+			message: error.message
+		});
 	}
 };
 
