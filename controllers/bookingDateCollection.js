@@ -54,6 +54,8 @@ export const get = async (req, res) => {
 			throw new Error('dogId 或 dateYM 數值格式錯誤、空字串或缺漏');
 		}
 
+		// RegExp 模糊比對，尋找包含指定的字串
+		// <ex>：指定找 2026-06，那模糊比較後找出的結果是 2026-06-01、2026-06-15，因為字串都有包含 2026-06
 		const regexYearMonth = new RegExp(YearMonth);
 
 		const result = await MbookingDateCollectionData.find({

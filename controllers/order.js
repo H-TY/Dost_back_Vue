@@ -10,7 +10,15 @@
 
 import validator from 'validator';
 import MbookingOrderData from '../models/bookingOrder.js';
-import { generateBookingOrderNumber, calculateTotalBookingTime, calculateTotalBookingPrice, calculateTopThreeOrder } from '../services/orderService.js';
+import MbookingDateCollectionData from '../models/bookingDateCollection.js';
+import {
+	checkDuplicateBooking,
+	generateBookingOrderNumber,
+	calculateTotalBookingTime,
+	calculateTotalBookingPrice,
+	calculateTopThreeOrder
+} from '../services/orderService.js';
+import { createBDC } from '../services/bookingDateCollectionService.js';
 import { StatusCodes } from 'http-status-codes';
 
 export const create = async (req, res) => {
@@ -23,6 +31,22 @@ export const create = async (req, res) => {
 		// console.log('date:', date);
 		const dogId = req.query.dogId;
 		// console.log('dogId:', dogId);
+		const dogName = data.dogName;
+		const bookingDate = data.bookingDate;
+		const bookingTime = data.bookingTime;
+
+		// 取年、月，提供後續查詢
+		const dateYM = bookingDate.split('/').slice(0, 2).join('/');
+		// console.log('dateYM', dateYM);
+
+		// ● 檢查是否有重複預約
+		const isDuplicate = await checkDuplicateBooking(dogId, dateYM, bookingDate, bookingTime);
+
+		if (isDuplicate) {
+			const error = new Error('日期或時段已經被預約，請刷新頁面後重新選擇');
+			error.statusCode = 400;
+			throw error;
+		}
 
 		// ● 生成訂單編號
 		// 因函式裡有使用到 async，故在呼叫函式時也要用到 await
@@ -51,13 +75,35 @@ export const create = async (req, res) => {
 		Object.assign(data, { bookingOrderNumber, totalBookingTime, totalPrice });
 		// console.log('combin-data:', data);
 
-		// ● 將檔案新增進 BD 資料庫 modelsName.create()
+		// ● 建立訂單檔案
+		// 將檔案新增進 BD 資料庫 modelsName.create()
 		const result = await MbookingOrderData.create(data);
+
+		// ★★★ 整理要建立的預約日期資料，方便日後查詢哪一些日期已預約
+		const handleData = bookingTime.map((el) => ({
+			dogId,
+			dogName,
+			bookingDate,
+			bookingTime: el
+		}));
+
+		// ★★★ 在後端資料庫建立預約時間列表的資料
+		const addBCD = await createBDC(handleData);
+		// console.log('addBCD:', addBCD);
+
+		// ★★★ 查詢最新預約時間列表的資料，回傳給前端更新日期選擇器
+		const regexYearMonth = new RegExp(dateYM);
+		const resultBCD = await MbookingDateCollectionData.find({
+			dogId,
+			bookingDate: regexYearMonth
+		});
+		// console.log('resultBCD:', resultBCD);
 
 		res.status(StatusCodes.OK).json({
 			success: true,
 			message: '預約成功',
-			result
+			result,
+			resultBCD
 		});
 	} catch (error) {
 		console.log(error);
@@ -68,6 +114,11 @@ export const create = async (req, res) => {
 			res.status(StatusCodes.BAD_REQUEST).json({
 				success: false,
 				message
+			});
+		} else if (error.statusCode) {
+			res.status(StatusCodes.BAD_REQUEST).json({
+				success: false,
+				message: error.message
 			});
 		} else {
 			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

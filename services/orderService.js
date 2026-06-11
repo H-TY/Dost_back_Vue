@@ -3,6 +3,26 @@
 import MbookingOrderData from '../models/bookingOrder.js';
 import MdogsData from '../models/dogsData.js';
 import MorderSerialNumberList from '../models/orderSerialNumberList.js';
+import MbookingDateCollectionData from '../models/bookingDateCollection.js';
+
+// ● 檢查訂單是否有重複預約的日期和時段
+export const checkDuplicateBooking = async (dogId, dateYM, date, time) => {
+	// console.log('checkDuplicateBooking_passInSData', dogId, date, time);
+
+	// RegExp 模糊比對
+	const regexYearMonth = new RegExp(dateYM);
+
+	const result = await MbookingDateCollectionData.find({
+		dogId,
+		bookingDate: regexYearMonth
+	});
+	// console.log('result', result);
+
+	const isDuplicate = result.some((el) => el.bookingDate === date && time.map((t) => t.includes(el.bookingTime)));
+	// console.log('isDuplicate', isDuplicate);
+
+	return isDuplicate;
+};
 
 // ● 生成訂單編號
 export const generateBookingOrderNumber = async (data, date) => {
