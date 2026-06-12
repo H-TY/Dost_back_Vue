@@ -18,7 +18,7 @@ import {
 	calculateTotalBookingPrice,
 	calculateTopThreeOrder
 } from '../services/orderService.js';
-import { createBDC } from '../services/bookingDateCollectionService.js';
+import { createBDC, deleteBDC } from '../services/bookingDateCollectionService.js';
 import { StatusCodes } from 'http-status-codes';
 
 export const create = async (req, res) => {
@@ -224,6 +224,9 @@ export const get = async (req, res) => {
 
 export const edit = async (req, res) => {
 	try {
+		// const data = req.body;
+		// console.log('controllers_order_edit_data:', data);
+
 		// console.log('req.params.id', req.params.id)
 		if (!validator.isMongoId(req.params.id)) throw new Error('ID');
 
@@ -231,13 +234,37 @@ export const edit = async (req, res) => {
 		// 需先通過驗證 { runValidators: true }，再將 req.params.id 作為搜尋關鍵詞，更新相對 id 的 req.body，若失敗則拋出錯誤
 		// 設置 new: true 返回更新後的使用者資料
 		const userUpdate = await MbookingOrderData.findByIdAndUpdate(req.params.id, req.body, { runValidators: true, new: true }).orFail(new Error('NOT FOUND'));
+		// console.log('userUpdate', userUpdate);
+
+		// 設定資料庫刪除完資料後要回傳的訊息
+		let BDtext = '';
+
+		// ★★★ 因為取消訂單，故一併後端資料庫的預約日期列表也須更新
+		if (!userUpdate.orderStatus) {
+			// 整理要刪除的預約日期資料，因 bookingTime 為陣列型態的資料可能有多個值，需整理成一筆資料、一個陣列、一個值，方便後續資料庫的操作
+			const handleData = userUpdate.bookingTime.map((el) => {
+				return {
+					dogId: userUpdate.dogId,
+					bookingDate: userUpdate.bookingDate,
+					bookingTime: el
+				};
+			});
+
+			// ★★★ 資料庫刪除指定的預約時間列表的資料
+			const deleteBCD = await deleteBDC(handleData);
+			// console.log('deleteBCD:', deleteBCD);
+
+			BDtext = deleteBCD;
+		}
 
 		res.status(StatusCodes.OK).json({
 			success: true,
 			message: '',
+			BDtext,
 			userUpdate
 		});
 	} catch (error) {
+		console.log('error：', error);
 		if (error.name === 'CastError' || error.message === 'ID') {
 			res.status(StatusCodes.BAD_REQUEST).json({
 				success: false,
