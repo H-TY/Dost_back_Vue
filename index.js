@@ -8,6 +8,7 @@ import { rateLimit } from 'express-rate-limit';
 import Ruser from './routes/user.js';
 import Rdogs from './routes/dogs.js';
 import Rorder from './routes/order.js';
+import RuserFavorite from './routes/userFavorite.js';
 import RuserSetting from './routes/userSetting.js';
 import RbookingDateCollection from './routes/bookingDateCollection.js';
 import './passport/passport.js';
@@ -80,6 +81,7 @@ app.use('/user', Ruser);
 app.use('/userSetting', RuserSetting);
 app.use('/dogs', Rdogs);
 app.use('/order', Rorder);
+app.use('/favorite', RuserFavorite);
 app.use('/bookingDateCollection', RbookingDateCollection);
 // 當不符合上述路徑的請求處理的東西，都會進入 app.all()
 app.all('*', (req, res) => {

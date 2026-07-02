@@ -17,6 +17,9 @@ router.get('/all', auth.authJwt, admin, getAll);
 // 查詢多個物件，使用者只能看到有標註上架的狗狗資訊
 router.get('/', get);
 
+// 需登入，指定查詢多個物件，使用者只能看到有標註上架的狗狗資訊
+router.get('/multipleItems', auth.authJwt, get);
+
 // 查詢單個物件
 router.get('/:id', getId);
 
