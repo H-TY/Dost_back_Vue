@@ -18,7 +18,7 @@ export const checkDuplicateBooking = async (dogId, dateYM, date, time) => {
 	});
 	// console.log('result', result);
 
-	const isDuplicate = result.some((el) => el.bookingDate === date && time.map((t) => t.includes(el.bookingTime)));
+	const isDuplicate = result.some((el) => el.bookingDate === date && time.some((t) => t.includes(el.bookingTime)));
 	// console.log('isDuplicate', isDuplicate);
 
 	return isDuplicate;
