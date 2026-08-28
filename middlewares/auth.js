@@ -34,6 +34,10 @@ export const authLogin = (req, res, next) => {
 // JWT 的驗證（token 驗證）
 export const authJwt = (req, res, next) => {
 	passport.authenticate('jwt', { session: false }, (error, data, info) => {
+		// console.log('authJwt-error', error);
+		// console.log('authJwt-data', data);
+		// console.log('authJwt-info', info);
+
 		if (error || !data) {
 			// passport.js/jwt 的驗證策略錯誤
 			if (info instanceof jsonwebtoken.JsonWebTokenError) {
@@ -54,6 +58,7 @@ export const authJwt = (req, res, next) => {
 			}
 			return;
 		}
+
 		req.user = data.user;
 		req.token = data.token;
 		next();

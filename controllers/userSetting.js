@@ -10,7 +10,7 @@ export const createAndUpdate = async (req, res) => {
 		// error.addError(
 		// 	'name',
 		// 	new mongoose.Error.ValidatorError({
-		// 		message: '不可留白',
+		// 		message: '不可留白（test 資訊）',
 		// 		path: 'name',
 		// 		value: ''
 		// 	})
@@ -84,6 +84,9 @@ export const createAndUpdate = async (req, res) => {
 
 export const profile = async (req, res) => {
 	try {
+		// ★★★ 手動觸發 mongoDB 的驗證錯誤
+		// throw new Error('測試 profile 錯誤');
+
 		const id = req.query.userId;
 		// console.log('controllers_userSetting_profile_id:', id);
 
@@ -93,12 +96,14 @@ export const profile = async (req, res) => {
 		// 當後端資料庫搜尋無資料，會回傳 null，這不會被歸類為 "錯誤"，所以不會在 catch (error) 那邊做回傳
 		if (!result) {
 			return res.status(StatusCodes.OK).json({
-				success: false
+				success: false,
+				message: '尚未建立使用者設定檔'
 			});
 		}
 
 		res.status(StatusCodes.OK).json({
 			success: true,
+			message: '成功取得使用者設定檔',
 			result
 		});
 	} catch (error) {
@@ -116,7 +121,7 @@ export const profile = async (req, res) => {
 
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 			success: false,
-			message: '未知錯誤'
+			message: error.message ?? '未知錯誤'
 		});
 	}
 };
