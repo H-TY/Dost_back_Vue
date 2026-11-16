@@ -9,6 +9,7 @@
 // 將運算或資料庫回傳的結果整理成 API 回應（JSON、XML、HTML等）。
 
 import validator from 'validator';
+import mongoose from 'mongoose';
 import MbookingOrderData from '../models/bookingOrder.js';
 import MbookingDateCollectionData from '../models/bookingDateCollection.js';
 import {
@@ -22,6 +23,9 @@ import { createBDC, deleteBDC } from '../services/bookingDateCollectionService.j
 import { StatusCodes } from 'http-status-codes';
 
 export const create = async (req, res) => {
+	// 建立會話，開始 Transaction
+	const session = await mongoose.startSession();
+
 	try {
 		const data = req.body;
 		// console.log('controllers_order_create_data:', data);
@@ -35,61 +39,74 @@ export const create = async (req, res) => {
 		const bookingDate = data.bookingDate;
 		const bookingTime = data.bookingTime;
 
+		// ● 測試錯誤處理：觸發與已知預約日期資料資料庫的重複資料
+		// const bookingDate = '2026/11/27';
+		// const bookingTime = ['19:00～21:00'];
+
 		// 取年、月，提供後續查詢
 		const dateYM = bookingDate.split('/').slice(0, 2).join('/');
 		// console.log('dateYM', dateYM);
 
-		// ● 檢查是否有重複預約
+		// ● 檢查與已知預約日期資料資料庫是否有重複資料，若有則丟出錯誤，停止新增資料的動作
 		const isDuplicate = await checkDuplicateBooking(dogId, dateYM, bookingDate, bookingTime);
 
 		if (isDuplicate) {
-			const error = new Error('日期或時段已經被預約，請刷新頁面後重新選擇');
-			error.statusCode = 400;
+			const error = new Error('此日期或時段已被預約，請重新整理頁面');
+			error.statusCode = StatusCodes.CONFLICT;
 			throw error;
 		}
 
-		// ● 生成訂單編號
-		// 因函式裡有使用到 async，故在呼叫函式時也要用到 await
-		// async 函式的本質是什麼？一定回傳 Promise，故要使用 await 取到值
-		const bookingOrderNumber = await generateBookingOrderNumber(data, date);
-		// console.log('bookingOrderNumber:', bookingOrderNumber);
+		// ★★★ 使用 Transaction 交易功能，將 「已預約日期資料」 和 「訂單建立」 兩個動作要同時成功或同時失敗，使兩邊的資料庫同步（訂單資料庫和已預約日期資料資料庫同步）
+		const TResult = await mongoose.connection.transaction(async (session) => {
+			// ★★★ 整理要建立的已預約日期資料，方便日後查詢哪一些日期已預約
+			const handleData = bookingTime.map((el) => ({
+				dogId,
+				dogName,
+				bookingDate,
+				bookingTime: el
+			}));
 
-		// ● 計算訂單總時數
-		const totalBookingTime = await calculateTotalBookingTime(data);
-		// console.log('totalBookingTime:', totalBookingTime);
+			// ★★★ 在資料庫建立已預約時間列表的資料
+			// 同時也會觸發檢查 Unique Index（models/bookingDateCollectionData.js），避免內容相同的 A、B 兩筆訂單同時被建立的情況，因為已預約日期資料資料庫有設置 Unique Index，若有重複的資料則會丟出錯誤，停止新增資料的動作。
+			// 將 session 參數傳入函式，以利後續 Transaction 交易功能的使用，若沒有這個參數，則無法同時成功或同時失敗
+			const addBCD = await createBDC(handleData, session);
+			// console.log('addBCD:', addBCD);
 
-		// ● 計算訂單總金額
-		const totalPrice = await calculateTotalBookingPrice(data, dogId, totalBookingTime);
-		// console.log('totalPrice:', totalPrice);
+			// ● 生成訂單編號
+			// 因函式裡有使用到 async，故在呼叫函式時也要用到 await
+			// async 函式的本質是什麼？一定回傳 Promise，故要使用 await 取到值
+			const bookingOrderNumber = await generateBookingOrderNumber(data, date);
+			// console.log('bookingOrderNumber:', bookingOrderNumber);
 
-		// 將上面的計算結果（訂單編號、總時數、總金額）併入 req.body
-		// 因 req.body 被設置為 [Object: null prototype] 的物件類型，可以用 Object.assign(A, B) 將 B 合併進 A物件
-		// 將宣告的變數用大括號 {} 包住，就會視為物件
-		// 當「屬性名稱 key」和「變數名稱」一樣時，JS 允許省略/簡寫。
-		// 完整寫法：
-		// Object.assign(data,{
-		// 									bookingOrderNumber: bookingOrderNumber,
-		// 									totalBookingTime: totalBookingTime
-		// 									});
+			// ● 計算訂單總時數
+			const totalBookingTime = await calculateTotalBookingTime(data);
+			// console.log('totalBookingTime:', totalBookingTime);
 
-		Object.assign(data, { bookingOrderNumber, totalBookingTime, totalPrice });
-		// console.log('combin-data:', data);
+			// ● 計算訂單總金額
+			const totalPrice = await calculateTotalBookingPrice(data, dogId, totalBookingTime);
+			// console.log('totalPrice:', totalPrice);
 
-		// ● 建立訂單檔案
-		// 將檔案新增進 BD 資料庫 modelsName.create()
-		const result = await MbookingOrderData.create(data);
+			// 將上面的計算結果（訂單編號、總時數、總金額）併入 req.body
+			// 因 req.body 被設置為 [Object: null prototype] 的物件類型，可以用 Object.assign(A, B) 將 B 合併進 A物件
+			// 將宣告的變數用大括號 {} 包住，就會視為物件
+			// 當「屬性名稱 key」和「變數名稱」一樣時，JS 允許省略/簡寫。
+			// 完整寫法：
+			// Object.assign(data,{
+			// 									bookingOrderNumber: bookingOrderNumber,
+			// 									totalBookingTime: totalBookingTime
+			// 									});
 
-		// ★★★ 整理要建立的預約日期資料，方便日後查詢哪一些日期已預約
-		const handleData = bookingTime.map((el) => ({
-			dogId,
-			dogName,
-			bookingDate,
-			bookingTime: el
-		}));
+			Object.assign(data, { bookingOrderNumber, totalBookingTime, totalPrice });
+			// console.log('combin-data:', data);
 
-		// ★★★ 在後端資料庫建立預約時間列表的資料
-		const addBCD = await createBDC(handleData);
-		// console.log('addBCD:', addBCD);
+			// ● 建立訂單檔案
+			// 將檔案新增進 BD 資料庫 modelsName.create()
+			// { session } 表示將此資料庫操作列入所屬/指定的交易 Session，確保該操作納入交易管理，與交易中的其他資料庫操作共同提交或回滾，若某一資料庫操作失敗/錯誤，此交易 Session 的所有操作過的資料回復至交易前的資料狀態（也就是回滾）。
+			// const [A] = array 等同於 const A = array[0] 都表示取出陣列中第一個值
+			const [result] = await MbookingOrderData.create([data], { session });
+
+			return result;
+		});
 
 		// ★★★ 查詢最新預約時間列表的資料，回傳給前端更新日期選擇器
 		const regexYearMonth = new RegExp(dateYM);
@@ -102,11 +119,13 @@ export const create = async (req, res) => {
 		res.status(StatusCodes.OK).json({
 			success: true,
 			message: '預約成功',
-			result,
+			result: TResult,
 			resultBCD
 		});
 	} catch (error) {
-		console.log(error);
+		// console.log('Controller_createOrder_error 1', error);
+		// console.dir(error, { showHidden: true, depth: null });
+
 		if (error.name === 'ValidationError') {
 			const key = Object.keys(error.errors)[0];
 			const message = error.errors[key].message;
@@ -116,7 +135,7 @@ export const create = async (req, res) => {
 				message
 			});
 		} else if (error.statusCode) {
-			res.status(StatusCodes.BAD_REQUEST).json({
+			res.status(error.statusCode).json({
 				success: false,
 				message: error.message
 			});
@@ -126,6 +145,9 @@ export const create = async (req, res) => {
 				message: '新建訂單存入資料庫時，發生未知錯誤'
 			});
 		}
+	} finally {
+		// 結束此次交易 Transaction，釋放資源
+		await session.endSession();
 	}
 };
 
